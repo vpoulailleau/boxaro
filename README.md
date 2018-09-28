@@ -12,5 +12,25 @@ boxaro is licenced under 3-clause BSD licence
 * boxaro convert your textual description in a graphviz compatible syntax
 * graphviz (dot, neato…) generates PNG, SVG…
 
-# Examples
+# Example
 
+```
+box my_first_box
+    inputs
+        A
+        B
+    outputs
+        C
+        D
+        
+    box another_box
+        label A nice box
+    
+connections
+    my_first_box.A -> my_first_box.another_box
+    my_first_box.B -> my_first_box.another_box
+    my_first_box.another_box -> my_first_box.C
+    my_first_box.another_box "important message"-> my_first_box.C
+```
+
+# Syntax
