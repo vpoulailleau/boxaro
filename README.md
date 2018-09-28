@@ -44,7 +44,7 @@ A box is created by issuing a
 ```
 box my_first_box
 ```
-where my_first_box is an identifier made of letters, numbers and underscores.
+where `my_first_box` is an identifier made of letters, numbers and underscores.
 
 A box may contain another box.
 
@@ -72,7 +72,7 @@ box my_first_box
 
 ## Connections
 
-The list of connections is provided in a "connections" section. Each connection mentions the full paths to elements:
+The list of connections is provided in a `connections` section. Each connection mentions the full paths to elements:
 ```
 connections
     my_first_box.A -> my_first_box.another_box
