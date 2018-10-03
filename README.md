@@ -33,6 +33,8 @@ connections
     my_first_box.another_box "important message"-> my_first_box.D
 ```
 
+![boxaro example](/examples/first.png "First example")
+
 # Syntax
 
 * indentation is important (readibility counts)
