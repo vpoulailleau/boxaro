@@ -222,15 +222,23 @@ if __name__ == '__main__':
         node [shape = plaintext]
 
         // inputs
-    """), '    ')
+        subgraph cluster_{}_inputs {{
+            color = white
+    """.format(box.name)), '    ')
     for input in box.inputs:
-        graph += '    {}\n'.format(input)
-    graph += '    {{rank = same; {}}}\n'.format(' '.join(box.inputs))
-    graph += '\n    // outputs\n'
+        graph += '        {}\n'.format(input)
+    graph += '        {{rank = same; {}}}\n'.format(' '.join(box.inputs))
+    graph += indent(dedent("""\
+        }}
+
+        // outputs
+        subgraph cluster_{}_outputs {{
+            color = white
+    """.format(box.name)), '    ')
     for output in box.outputs:
-        graph += '    {}\n'.format(output)
-    graph += '    {{rank = same; {}}}\n'.format(' '.join(box.outputs))
-    graph += '\n    // processes and instances\n'
+        graph += '        {}\n'.format(output)
+    graph += '        {{rank = same; {}}}\n'.format(' '.join(box.outputs))
+    graph += '    }\n    // processes and instances\n'
     graph += '    node [shape = square style = filled fillcolor = gray95]\n'
     for box in box.children:
         if box.label:
