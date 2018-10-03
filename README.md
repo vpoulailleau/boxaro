@@ -30,7 +30,7 @@ connections
     my_first_box.A -> my_first_box.another_box
     my_first_box.B -> my_first_box.another_box
     my_first_box.another_box -> my_first_box.C
-    my_first_box.another_box "important message"-> my_first_box.C
+    my_first_box.another_box "important message"-> my_first_box.D
 ```
 
 # Syntax
