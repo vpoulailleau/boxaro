@@ -126,50 +126,59 @@ connections_not_labelled = []
 
 
 def parse(filepath):
+    try:
+        with open(filepath, encoding='utf-8') as infile:
+            lines = infile.readlines()
+    except UnicodeDecodeError:
+        with open(filepath, encoding='latin-1') as infile:
+            lines = infile.readlines()
+
+    return parse_lines(lines)
+
+def parse_lines(lines):
     read_state = []  # list of tuples (type, level of indentation)
     top_box = ''
 
-    with open(filepath, encoding='utf-8') as infile:
-        for line in infile:
-            if line.strip():
-                logger.debug('Treating %s', line)
-                line = line.replace('\t', '    ')
-                line_level = len(line) - len(line.lstrip())
+    for line in lines:
+        if line.strip():
+            logger.debug('Treating %s', line)
+            line = line.replace('\t', '    ')
+            line_level = len(line) - len(line.lstrip())
 
-                while read_state and line_level <= read_state[-1][1]:
-                    read_state.pop()
+            while read_state and line_level <= read_state[-1][1]:
+                read_state.pop()
 
-                if line.lstrip().startswith('box '):
-                    name = line.split()[-1]
-                    top_box = top_box or name
-                    read_state.append(('box', line_level, name))
-                    box = Box(name)
-                    for state in reversed(read_state[:-1]):
-                        if state[0] == 'box':
-                            boxes[state[2]].children.append(box)
-                            break
-                elif line.lstrip().startswith('inputs'):
-                    read_state.append(('inputs', line_level))
-                elif line.lstrip().startswith('outputs'):
-                    read_state.append(('outputs', line_level))
-                elif line.lstrip().startswith('connections'):
-                    read_state.append(('connections', line_level))
-                elif line.lstrip().startswith('label'):
-                    box_name = read_state[-1][2]
-                    boxes[box_name].label = line.lstrip()[6:].strip()
-                else:
-                    # find current state
-                    state = read_state[-1][0]
-                    if state == 'inputs':
-                        box_name = read_state[-2][2]
-                        boxes[box_name].inputs.append(line.strip())
-                    elif state == 'outputs':
-                        box_name = read_state[-2][2]
-                        boxes[box_name].outputs.append(line.strip())
-                    elif state == 'connections':
-                        Connection(line)
+            if line.lstrip().startswith('box '):
+                name = line.split()[-1]
+                top_box = top_box or name
+                read_state.append(('box', line_level, name))
+                box = Box(name)
+                for state in reversed(read_state[:-1]):
+                    if state[0] == 'box':
+                        boxes[state[2]].children.append(box)
+                        break
+            elif line.lstrip().startswith('inputs'):
+                read_state.append(('inputs', line_level))
+            elif line.lstrip().startswith('outputs'):
+                read_state.append(('outputs', line_level))
+            elif line.lstrip().startswith('connections'):
+                read_state.append(('connections', line_level))
+            elif line.lstrip().startswith('label'):
+                box_name = read_state[-1][2]
+                boxes[box_name].label = line.lstrip()[6:].strip()
+            else:
+                # find current state
+                state = read_state[-1][0]
+                if state == 'inputs':
+                    box_name = read_state[-2][2]
+                    boxes[box_name].inputs.append(line.strip())
+                elif state == 'outputs':
+                    box_name = read_state[-2][2]
+                    boxes[box_name].outputs.append(line.strip())
+                elif state == 'connections':
+                    Connection(line)
 
-                logger.debug('    state is now %s', str(read_state))
+            logger.debug('    state is now %s', str(read_state))
     return top_box
 
 if __name__ == '__main__':
