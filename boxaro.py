@@ -127,6 +127,7 @@ connections_not_labelled = []
 
 def parse(filepath):
     read_state = []  # list of tuples (type, level of indentation)
+    top_box = ''
 
     with open(filepath, encoding='utf-8') as infile:
         for line in infile:
@@ -140,6 +141,7 @@ def parse(filepath):
 
                 if line.lstrip().startswith('box '):
                     name = line.split()[-1]
+                    top_box = top_box or name
                     read_state.append(('box', line_level, name))
                     box = Box(name)
                     for state in reversed(read_state[:-1]):
@@ -168,7 +170,7 @@ def parse(filepath):
                         Connection(line)
 
                 logger.debug('    state is now %s', str(read_state))
-
+    return top_box
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -208,13 +210,11 @@ if __name__ == '__main__':
     else:
         console_handler.setLevel(logging.DEBUG)
 
-    parse(args.input_file)
-
-    entity = Path(args.input_file).stem
-    box = boxes[entity]
+    box_name = parse(args.input_file)
+    box = boxes[box_name]
     graph = 'digraph HDD {\n'
     graph += '    graph [pad="0.5", nodesep="1", ranksep="2"];\n'
-    if len(box.children) > 4:
+    if len(box.children) < 4000000:
         graph += '    rankdir="LR" // horizontal graph\n'
     graph += indent(dedent("""\
         splines = "spline" // nice arrows
