@@ -1,0 +1,25 @@
+box my_first_box
+    inputs
+        A
+        B
+    outputs
+        C
+        D
+        
+    box another_box
+        label A nice box
+    
+    box other_box
+        label Another nice box
+        inputs
+            FOO
+        outputs
+            BAR
+    
+connections
+    my_first_box.A -> my_first_box.another_box
+    my_first_box.B -> my_first_box.another_box
+    my_first_box.another_box -> my_first_box.C
+    my_first_box.another_box "important message"-> my_first_box.D
+    my_first_box.A -> my_first_box.other_box.FOO
+    my_first_box.B -> my_first_box.other_box
