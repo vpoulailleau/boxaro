@@ -218,6 +218,7 @@ if __name__ == '__main__':
         graph += '    rankdir="LR" // horizontal graph\n'
     graph += indent(dedent("""\
         splines = "spline" // nice arrows
+        newrank = true // better ranking
 
         node [shape = plaintext]
 
