@@ -49,7 +49,7 @@ class Box:
     def __init__(self, name):
         self.name = name
         boxes[self.name] = self
-        self.label = ''
+        self._label = ''
         self.inputs = []
         self.outputs = []
         self.children = []
@@ -70,6 +70,71 @@ class Box:
         for child in self.children:
             text += '        {}\n'.format(repr(child))
         return text
+
+    @property
+    def label(self):
+        return self._label or self.name
+
+    @label.setter
+    def label(self, name):
+        self._label = name
+
+    def to_boxaro(self, indent_level):
+        if self.inputs or self.outputs or self.children:
+            graph = dedent("""\
+
+                subgraph cluster_BOXNAME {
+                    label = "BOXLABEL"
+                    node [shape = plaintext]
+
+                    // inputs
+                    subgraph cluster_BOXNAME_inputs {
+                        label = ""
+                        color = white
+                        BOXINPUTS
+                    }
+
+                    // outputs
+                    subgraph cluster_BOXNAME_outputs {
+                        label = ""
+                        color = white
+                        BOXOUTPUTS
+                    }
+
+                    // processes and instances
+                    BOXSUBBOXES
+                }
+            """)
+        else:
+            graph = dedent("""\
+                node [shape = square style = filled fillcolor = gray95]
+                BOXNAME [label = "BOXLABEL"]
+            """)
+
+        graph = graph.replace('BOXNAME', self.name)
+        graph = graph.replace('BOXLABEL', self.label)
+        graph = graph.replace('        BOXINPUTS', self.boxaro_inputs())
+        graph = graph.replace('        BOXOUTPUTS', self.boxaro_outputs())
+
+        subboxes = ''
+        for box in self.children:
+            subboxes += box.to_boxaro(indent_level + 1)
+        graph = graph.replace('    BOXSUBBOXES', subboxes)
+
+        return indent(graph, '    ')
+
+    def _boxaro_io_list(self, ios):
+        text = ''
+        for io in ios:
+            text += '        {}\n'.format(io)
+        text += '        {{rank = same; {}}}\n'.format(' '.join(ios))
+        return text
+
+    def boxaro_inputs(self):
+        return self._boxaro_io_list(self.inputs)
+
+    def boxaro_outputs(self):
+        return self._boxaro_io_list(self.outputs)
 
 
 boxes = {}
@@ -135,6 +200,7 @@ def parse(filepath):
 
     return parse_lines(lines)
 
+
 def parse_lines(lines):
     read_state = []  # list of tuples (type, level of indentation)
     top_box = ''
@@ -180,6 +246,7 @@ def parse_lines(lines):
 
             logger.debug('    state is now %s', str(read_state))
     return top_box
+
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -229,33 +296,8 @@ if __name__ == '__main__':
         splines = "spline" // nice arrows
         newrank = true // better ranking
 
-        node [shape = plaintext]
-
-        // inputs
-        subgraph cluster_{}_inputs {{
-            color = white
-    """.format(box.name)), '    ')
-    for input in box.inputs:
-        graph += '        {}\n'.format(input)
-    graph += '        {{rank = same; {}}}\n'.format(' '.join(box.inputs))
-    graph += indent(dedent("""\
-        }}
-
-        // outputs
-        subgraph cluster_{}_outputs {{
-            color = white
-    """.format(box.name)), '    ')
-    for output in box.outputs:
-        graph += '        {}\n'.format(output)
-    graph += '        {{rank = same; {}}}\n'.format(' '.join(box.outputs))
-    graph += '    }\n    // processes and instances\n'
-    graph += '    node [shape = square style = filled fillcolor = gray95]\n'
-    for box in box.children:
-        if box.label:
-            graph += '    {} [label = "{}"]\n'.format(box.name, box.label)
-        else:
-            graph += '    {}\n'.format(box.name)
-
+    """), '    ')
+    graph += box.to_boxaro(1)
     graph += '\n    // connections\n'
     for connection in connections_not_labelled:
         graph += '    {} -> {}\n'.format(
