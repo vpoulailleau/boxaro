@@ -79,7 +79,7 @@ class Box:
     def label(self, name):
         self._label = name
 
-    def to_boxaro(self, indent_level):
+    def to_boxaro(self):
         if self.inputs or self.outputs or self.children:
             graph = dedent("""\
 
@@ -118,7 +118,7 @@ class Box:
 
         subboxes = ''
         for box in self.children:
-            subboxes += box.to_boxaro(indent_level + 1)
+            subboxes += box.to_boxaro()
         graph = graph.replace('    BOXSUBBOXES', subboxes)
 
         return indent(graph, '    ')
@@ -297,7 +297,7 @@ if __name__ == '__main__':
         newrank = true // better ranking
 
     """), '    ')
-    graph += box.to_boxaro(1)
+    graph += box.to_boxaro()
     graph += '\n    // connections\n'
     for connection in connections_not_labelled:
         graph += '    {} -> {}\n'.format(
