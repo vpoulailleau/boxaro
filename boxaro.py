@@ -46,13 +46,14 @@ logger.addHandler(console_handler)
 
 
 class Box:
-    def __init__(self, name):
+    def __init__(self, name, top=False):
         self.name = name
         boxes[self.name] = self
         self._label = ''
         self.inputs = []
         self.outputs = []
         self.children = []
+        self.top = top
 
     def __repr__(self):
         return '<Box({})>'.format(self.name)
@@ -84,7 +85,7 @@ class Box:
             graph = dedent("""\
 
                 subgraph cluster_BOXNAME {
-                    label = "BOXLABEL"
+                    LABEL_COLOR
                     node [shape = plaintext]
 
                     // inputs
@@ -115,6 +116,11 @@ class Box:
         graph = graph.replace('BOXLABEL', self.label)
         graph = graph.replace('        BOXINPUTS', self.boxaro_inputs())
         graph = graph.replace('        BOXOUTPUTS', self.boxaro_outputs())
+
+        if self.top:
+            graph = graph.replace('    LABEL_COLOR', '    color = white')
+        else:
+            graph = graph.replace('    LABEL_COLOR', '    label = "{}"'.format(self.label))
 
         subboxes = ''
         for box in self.children:
@@ -216,9 +222,12 @@ def parse_lines(lines):
 
             if line.lstrip().startswith('box '):
                 name = line.split()[-1]
-                top_box = top_box or name
                 read_state.append(('box', line_level, name))
-                box = Box(name)
+                if top_box:
+                    box = Box(name)
+                else:
+                    top_box = name
+                    box = Box(name, top=True)
                 for state in reversed(read_state[:-1]):
                     if state[0] == 'box':
                         boxes[state[2]].children.append(box)
