@@ -89,18 +89,10 @@ class Box:
                     node [shape = plaintext]
 
                     // inputs
-                    subgraph cluster_BOXNAME_inputs {
-                        label = ""
-                        color = white
-                        BOXINPUTS
-                    }
+                    BOXINPUTS
 
                     // outputs
-                    subgraph cluster_BOXNAME_outputs {
-                        label = ""
-                        color = white
-                        BOXOUTPUTS
-                    }
+                    BOXOUTPUTS
 
                     // processes and instances
                     BOXSUBBOXES
@@ -114,8 +106,8 @@ class Box:
 
         graph = graph.replace('BOXNAME', self.name)
         graph = graph.replace('BOXLABEL', self.label)
-        graph = graph.replace('        BOXINPUTS', self.boxaro_inputs())
-        graph = graph.replace('        BOXOUTPUTS', self.boxaro_outputs())
+        graph = graph.replace('    BOXINPUTS', self.boxaro_inputs())
+        graph = graph.replace('    BOXOUTPUTS', self.boxaro_outputs())
 
         if self.top:
             graph = graph.replace('    LABEL_COLOR', '    color = white')
@@ -132,8 +124,8 @@ class Box:
     def _boxaro_io_list(self, ios):
         text = ''
         for io in ios:
-            text += '        {}\n'.format(io)
-        text += '        {{rank = same; {}}}\n'.format(' '.join(ios))
+            text += '    {}\n'.format(io)
+        text += '    {{rank = same; {}}}\n'.format(' '.join(ios))
         return text
 
     def boxaro_inputs(self):
