@@ -86,21 +86,24 @@ class Box:
 
                 subgraph cluster_BOXNAME {
                     LABEL_COLOR
-                    node [shape = plaintext]
 
                     // inputs
+                    node [shape=box style=filled color="#DDFFDD" fontsize=20]
                     BOXINPUTS
 
                     // outputs
+                    node [shape=box style=filled color="#FFEEDD" fontsize=20]
                     BOXOUTPUTS
 
                     // processes and instances
+                    node [shape=plaintext style=solid color=black fontsize=14]
+
                     BOXSUBBOXES
                 }
             """)
         else:
             graph = dedent("""\
-                node [shape = square style = filled fillcolor = gray95]
+                node [shape=square style=filled fillcolor=gray95]
                 BOXNAME [label = "BOXLABEL"]
             """)
 
