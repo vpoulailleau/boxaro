@@ -12,7 +12,7 @@ boxaro is licenced under 3-clause BSD licence
 * boxaro convert your textual description in a graphviz compatible syntax
 * graphviz (dot, neato…) generates PNG, SVG…
 
-# Example
+# Examples
 
 ```
 box my_first_box
@@ -34,6 +34,51 @@ connections
 ```
 
 ![boxaro example](/examples/first.png "First example")
+
+```
+box my_first_box
+    inputs
+        A
+        B
+    outputs
+        C
+        D
+
+    box another_box
+        label A nice box
+        inputs
+            E
+            F
+            G
+        outputs
+            H
+            I
+
+        box small_box
+
+        box other_box
+
+connections
+    my_first_box.A -> my_first_box.another_box.E
+    my_first_box.B -> my_first_box.another_box
+
+    my_first_box.another_box -> my_first_box.C
+    my_first_box.another_box -> my_first_box.D
+
+    my_first_box.another_box.E -> my_first_box.another_box.H
+    my_first_box.another_box.F -> my_first_box.another_box.H
+    my_first_box.another_box.G -> my_first_box.another_box.I
+
+    my_first_box.another_box.small_box -> my_first_box.another_box.other_box
+    my_first_box.another_box.other_box -> my_first_box.another_box.small_box
+
+    my_first_box.another_box.other_box -> my_first_box.another_box.I
+
+    my_first_box.another_box.I -> my_first_box.C
+    my_first_box.another_box.H "important message"-> my_first_box.D
+```
+
+![boxaro example](/examples/second.png "Second example")
 
 # Syntax
 
