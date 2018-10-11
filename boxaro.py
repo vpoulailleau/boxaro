@@ -80,12 +80,21 @@ class Box:
     def label(self, name):
         self._label = name
 
+    @property
+    def is_container(self):
+        return bool(self.inputs or self.outputs or self.children)
+
     def to_boxaro(self):
-        if self.inputs or self.outputs or self.children:
+        if self.is_container:
             graph = dedent("""\
 
                 subgraph cluster_BOXNAME {
+                    color=black
                     LABEL_COLOR
+
+                    // dummy node for box direct connection
+                    node [shape=point color=invis peripheries=0 height=0 width=0]
+                    dummy__BOXNAME
 
                     // inputs
                     node [shape=box style=filled color="#DDFFDD" fontsize=20]
@@ -137,6 +146,12 @@ class Box:
     def boxaro_outputs(self):
         return self._boxaro_io_list(self.outputs)
 
+    @property
+    def connection_name(self):
+        if self.is_container:
+            return 'dummy__{}'.format(self.name)
+        else:
+            return self.name
 
 boxes = {}
 
@@ -163,13 +178,10 @@ class Connection:
         else:
             logger.error('unrecognized connection: %s', text)
 
-        if self.label:
-            key = self.start + '#' + self.label
-            if key not in connections_labelled:
-                connections_labelled[key] = []
-            connections_labelled[key].append(self)
-        else:
-            connections_not_labelled.append(self)
+        key = self.start + '#' + self.label
+        if key not in connections:
+            connections[key] = []
+        connections[key].append(self)
 
     def __repr__(self):
         return '<Connection({}, {}, {})>'.format(
@@ -186,9 +198,33 @@ class Connection:
     def simple_end(self):
         return self.end.split('.')[-1]
 
+    def to_boxaro(self, split_mode=False):
+        if self.label:
+            configuration = 'label="{}" '.format(self.label)
+        else:
+            configuration = ''
 
-connections_labelled = {}
-connections_not_labelled = []
+        start = connection.simple_start
+        if start in boxes and boxes[start].is_container:
+            configuration += 'ltail=cluster_{} '.format(start)
+            start = boxes[start].connection_name
+
+        end = connection.simple_end
+        if end in boxes and boxes[end].is_container:
+            configuration += 'lhead=cluster_{} '.format(end)
+            end = boxes[end].connection_name
+
+        graph = '    {} -> {}'.format(start, end)
+
+        if configuration:
+            graph += ' [{}]\n'.format(configuration.strip())
+        else:
+            graph += '\n'
+        
+        return graph
+
+
+connections = {}
 
 
 def parse(filepath):
@@ -293,7 +329,7 @@ if __name__ == '__main__':
     box_name = parse(args.input_file)
     box = boxes[box_name]
     graph = 'digraph HDD {\n'
-    graph += '    graph [pad="0.5", nodesep="1", ranksep="2"];\n'
+    graph += '    graph [pad="0.5", nodesep="1", ranksep="2" compound=true];\n'
     if len(box.children) < 4000000:
         graph += '    rankdir="LR" // horizontal graph\n'
     graph += indent(dedent("""\
@@ -303,39 +339,46 @@ if __name__ == '__main__':
     """), '    ')
     graph += box.to_boxaro()
     graph += '\n    // connections\n'
-    for connection in connections_not_labelled:
-        graph += '    {} -> {}\n'.format(
-            connection.simple_start,
-            connection.simple_end,
-            connection.label,
-        )
-    for key in connections_labelled:
-        cons = connections_labelled[key]
-        if len(cons) == 1:
-            connection = cons[0]
-            graph += '    {} -> {} [label = "{}"]\n'.format(
-                connection.simple_start,
-                connection.simple_end,
-                connection.label,
-            )
-        else:
-            def valid_id(text):
-                return text.replace(' ', '').replace('.', '_')
-            splitter_name = 'splitter__{}__{}'.format(
-                valid_id(cons[0].start),
-                valid_id(cons[0].label),
-            )
 
-            graph += '    {} [shape = point]\n'.format(splitter_name)
-            graph += '    {} -> {} [label = "{}"]\n'.format(
-                cons[0].simple_start,
-                splitter_name,
-                cons[0].label,
-            )
-            for connection in cons:
-                graph += '    {} -> {}\n'.format(
-                    splitter_name,
-                    connection.simple_end,
+    for cons in connections.values():
+        if len(cons) == 1:
+            split_mode = False
+        else:
+            split_mode = True
+        # def valid_id(text):
+        #     return text.replace(' ', '').replace('.', '_')
+        # splitter_name = 'splitter__{}__{}'.format(
+        #     valid_id(cons[0].start),
+        #     valid_id(cons[0].label),
+        # )
+
+        # graph += '    {} [shape = point]\n'.format(splitter_name)
+        # graph += '    {} -> {} [label = "{}"]\n'.format(
+        #     cons[0].simple_start,
+        #     splitter_name,
+        #     cons[0].label,
+        # )
+        # for connection in cons:
+        #     graph += '    {} -> {}\n'.format(
+        #         splitter_name,
+        #         connection.simple_end,
+        #     )
+        for connection in cons:
+            graph += connection.to_boxaro(split_mode=split_mode)
+
+    graph += '\n    // dummy alignment hack\n'
+    graph += '    edge[style=invis]\n'
+    for box in boxes.values():
+        if box.is_container:
+            for io in box.inputs:
+                graph += '    {} -> {}'.format(
+                    io,
+                    box.connection_name,
+                )
+            for io in box.outputs:
+                graph += '    {} -> {}'.format(
+                    box.connection_name,
+                    io,
                 )
 
     graph += '}\n'
