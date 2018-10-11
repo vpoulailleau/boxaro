@@ -25,7 +25,7 @@ connections
     my_first_box.B -> my_first_box.another_box
 
     my_first_box.another_box -> my_first_box.C
-    my_first_box.another_box "important message"-> my_first_box.D
+    my_first_box.another_box -> my_first_box.D
 
     my_first_box.another_box.E -> my_first_box.another_box.H
     my_first_box.another_box.F -> my_first_box.another_box.H
@@ -37,4 +37,5 @@ connections
     my_first_box.another_box.other_box -> my_first_box.another_box.I
 
     my_first_box.another_box.I -> my_first_box.C
-    my_first_box.another_box.H -> my_first_box.D
+    my_first_box.another_box.H "important message"-> my_first_box.D
+
