@@ -16,6 +16,30 @@ boxaro is licenced under 3-clause BSD licence
 
 ```
 box my_first_box
+    box box1
+        label A first box
+
+    box box2
+        label A second box
+
+    box box3
+        label A third box
+
+    box box4
+        label A fourth box
+
+connections
+    box1 -> box2
+    box2 -> box3
+    box1 -> box3
+    box2 -> box4
+```
+
+![boxaro example](/examples/third.png "Third example")
+
+
+```
+box my_first_box
     inputs
         A
         B
