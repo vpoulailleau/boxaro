@@ -9,7 +9,7 @@ boxaro is licenced under 3-clause BSD licence
 # Usage
 
 * You describe your graph with an easy textual syntax
-* boxaro convert your textual description in a graphviz compatible syntax
+* boxaro converts your textual description in a graphviz compatible syntax
 * graphviz (dot, neato…) generates PNG, SVG…
 
 # Examples
