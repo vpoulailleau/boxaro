@@ -12,7 +12,7 @@ box my_first_box
         label A fourth box
 
 connections
-    box1 -> box2
-    box2 -> box3
-    box1 -> box3
-    box2 -> box4
+    my_first_box.box1 -> my_first_box.box2
+    my_first_box.box2 -> my_first_box.box3
+    my_first_box.box1 -> my_first_box.box3
+    my_first_box.box2 -> my_first_box.box4
