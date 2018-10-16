@@ -49,6 +49,7 @@ class Box:
     def __init__(self, name, top=False):
         self.name = name
         boxes[self.name] = self
+        self._shape = 'square'
         self._label = ''
         self.inputs = []
         self.outputs = []
@@ -81,6 +82,21 @@ class Box:
         self._label = name
 
     @property
+    def shape(self):
+        if self._shape == 'point':
+            return 'node [shape=point color=black height=0.4 width=0.4]'
+        elif self._shape == 'ellipse':
+            return 'node [shape=ellipse style=filled fillcolor=gray95]'
+        else:
+            return 'node [shape=square style=filled fillcolor=gray95]'
+
+    # TODO faire un node property qui pour centraliser l'info
+
+    @shape.setter
+    def shape(self, shape_name):
+        self._shape = shape_name
+
+    @property
     def is_container(self):
         return bool(self.inputs or self.outputs or self.children)
 
@@ -94,7 +110,7 @@ class Box:
 
                     // dummy node for box direct connection
                     node [shape=point color=invis peripheries=0 height=0 width=0]
-                    dummy__BOXNAME
+                    dummy__BOXNAME // TODO only if needed
 
                     // inputs
                     node [shape=box style=filled color="#DDFFDD" fontsize=20]
@@ -112,19 +128,23 @@ class Box:
             """)
         else:
             graph = dedent("""\
-                node [shape=square style=filled fillcolor=gray95]
+                BOXSHAPE
                 BOXNAME [label = "BOXLABEL"]
             """)
 
         graph = graph.replace('BOXNAME', self.name)
         graph = graph.replace('BOXLABEL', self.label)
+        graph = graph.replace('BOXSHAPE', self.shape)
         graph = graph.replace('    BOXINPUTS', self.boxaro_inputs())
         graph = graph.replace('    BOXOUTPUTS', self.boxaro_outputs())
 
         if self.top:
             graph = graph.replace('    LABEL_COLOR', '    color = white')
         else:
-            graph = graph.replace('    LABEL_COLOR', '    label = "{}"'.format(self.label))
+            graph = graph.replace(
+                '    LABEL_COLOR',
+                '    label = "{}"'.format(
+                    self.label))
 
         subboxes = ''
         for box in self.children:
@@ -152,6 +172,7 @@ class Box:
             return 'dummy__{}'.format(self.name)
         else:
             return self.name
+
 
 boxes = {}
 
@@ -220,7 +241,7 @@ class Connection:
             graph += ' [{}]\n'.format(configuration.strip())
         else:
             graph += '\n'
-        
+
         return graph
 
 
@@ -272,6 +293,9 @@ def parse_lines(lines):
             elif line.lstrip().startswith('label'):
                 box_name = read_state[-1][2]
                 boxes[box_name].label = line.lstrip()[6:].strip()
+            elif line.lstrip().startswith('shape'):
+                box_name = read_state[-1][2]
+                boxes[box_name].shape = line.lstrip()[6:].strip()
             else:
                 # find current state
                 state = read_state[-1][0]
