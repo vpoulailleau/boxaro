@@ -55,6 +55,7 @@ class Box:
         self.outputs = []
         self.children = []
         self.top = top
+        self.has_direct_connections = False
 
     def __repr__(self):
         return '<Box({})>'.format(self.name)
@@ -108,9 +109,7 @@ class Box:
                     color=black
                     LABEL_COLOR
 
-                    // dummy node for box direct connection
-                    node [shape=point color=invis peripheries=0 height=0 width=0]
-                    dummy__BOXNAME // TODO only if needed
+                    DUMMY_NODE
 
                     // inputs
                     node [shape=box style=filled color="#DDFFDD" fontsize=20]
@@ -137,6 +136,15 @@ class Box:
         graph = graph.replace('BOXSHAPE', self.shape)
         graph = graph.replace('    BOXINPUTS', self.boxaro_inputs())
         graph = graph.replace('    BOXOUTPUTS', self.boxaro_outputs())
+
+        if self.has_direct_connections:
+            graph = graph.replace(
+                '    DUMMY_NODE',
+                '    // dummy node for box direct connection\n'
+                '    node [shape=point color=invis height=0 width=0]\n'
+                '    dummy__' + self.name + '\n')
+        else:
+            graph = graph.replace('    DUMMY_NODE', '')
 
         if self.top:
             graph = graph.replace('    LABEL_COLOR', '    color = white')
@@ -203,6 +211,11 @@ class Connection:
         if key not in connections:
             connections[key] = []
         connections[key].append(self)
+
+        if self.simple_start in boxes:
+            boxes[self.simple_start].has_direct_connections = True
+        if self.simple_end in boxes:
+            boxes[self.simple_end].has_direct_connections = True
 
     def __repr__(self):
         return '<Connection({}, {}, {})>'.format(
@@ -393,14 +406,14 @@ if __name__ == '__main__':
     graph += '\n    // dummy alignment hack\n'
     graph += '    edge[style=invis]\n'
     for box in boxes.values():
-        if box.is_container:
+        if box.is_container and box.has_direct_connections:
             for io in box.inputs:
-                graph += '    {} -> {}'.format(
+                graph += '    {} -> {} [weight=5]\n'.format(
                     io,
                     box.connection_name,
                 )
             for io in box.outputs:
-                graph += '    {} -> {}'.format(
+                graph += '    {} -> {} [weight=5]\n'.format(
                     box.connection_name,
                     io,
                 )
