@@ -275,6 +275,7 @@ def parse(filepath):
 def parse_lines(lines):
     read_state = []  # list of tuples (type, level of indentation)
     top_box = ''
+    orientation = 'horizontal'
 
     for line in lines:
         if line.strip():
@@ -285,7 +286,13 @@ def parse_lines(lines):
             while read_state and line_level <= read_state[-1][1]:
                 read_state.pop()
 
-            if line.lstrip().startswith('box '):
+            if line.startswith('orientation'):
+                wanted_orientation = line.split()[-1].strip()
+                if wanted_orientation == 'vertical':
+                    orientation = wanted_orientation
+                elif wanted_orientation != 'horizontal':
+                    logger.error('unknown graph orientation: %s', wanted_orientation)
+            elif line.lstrip().startswith('box '):
                 name = line.split()[-1]
                 read_state.append(('box', line_level, name))
                 if top_box:
@@ -322,7 +329,7 @@ def parse_lines(lines):
                     Connection(line)
 
             logger.debug('    state is now %s', str(read_state))
-    return top_box
+    return top_box, orientation
 
 
 if __name__ == '__main__':
@@ -363,12 +370,14 @@ if __name__ == '__main__':
     else:
         console_handler.setLevel(logging.DEBUG)
 
-    box_name = parse(args.input_file)
+    box_name, graph_orientation = parse(args.input_file)
     box = boxes[box_name]
     graph = 'digraph HDD {\n'
     graph += '    graph [pad="0.5", nodesep="1", ranksep="2" compound=true];\n'
-    if len(box.children) < 4000000:
+    if graph_orientation == 'horizontal':
         graph += '    rankdir="LR" // horizontal graph\n'
+    else:
+        graph += '    rankdir="TB" // vertical graph\n'
     graph += indent(dedent("""\
         splines = "spline" // nice arrows
         newrank = true // better ranking
